@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-import { Movie} from './generated/src/proto/movies_pb'
+import { Movie, Cast, Genre} from './generated/src/proto/movies_pb'
 import {  MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
 import { Collection } from 'mongodb';
 import { createMovieProtobuf } from './utils/createMovieProtobuf';
@@ -94,6 +94,36 @@ async function createMovie(collection: Collection, movie: Movie): Promise<string
   }
 }
 
+async function getMoviesByGenre(collection: Collection, genre: Genre){
+  try {
+
+    const value = genre.getName();
+    const query = { genres: { $elemMatch: { $eq: value } } };
+
+    const moviesMongo = await collection.find(query).toArray();
+    const protoMovies = moviesMongo.map(item => createMovieProtobuf(item));
+
+    return protoMovies;
+  } catch (error) {
+    return []
+  }
+}
+
+async function getMoviesByActor(collection: Collection, cast: Cast){
+  try {
+
+    const actor = cast.getActor();
+
+    const query = { cast: { $elemMatch: { $eq: actor } } };
+
+    const moviesMongo = await collection.find(query).toArray();
+    const protoMovies = moviesMongo.map(item => createMovieProtobuf(item));
+
+    return protoMovies;
+  } catch (error) {
+    return []
+  }
+}
 
 async function run() {
   try {
@@ -101,17 +131,25 @@ async function run() {
     const db = client.db(database);
     const collection = db.collection(table);
 
+    // simulando query de filme por ator
+    // const cast = new Cast();
+    // cast.setActor("jhonatan");
+    // await getMoviesByActor(collection, cast);
 
-    const binaryMovie:Uint8Array = createFakeMovieInBytes();
-    const protoMovie = Movie.deserializeBinary(binaryMovie);
 
-    const id = await createMovie(collection, protoMovie);
-    if(id){
-      const movieMongo = await getMovieById(collection, id);
-      console.log("movieMongo", movieMongo?.toObject())
-    }
-    // console.log("serializeBinary", protoMovies[0].serializeBinary());
-    // console.log("toObject", protoMovies[0].toObject());
+    // simulando query de filme por categoria
+    // const genre = new Genre();
+    // genre.setName("genre 1");
+    // await getMoviesByGenre(collection, genre);
+
+    // Simulando recebimento de valor em binary e mandando create
+    // const binaryMovie:Uint8Array = createFakeMovieInBytes();
+    // const protoMovie = Movie.deserializeBinary(binaryMovie);
+    // const id = await createMovie(collection, protoMovie);
+    // if(id){
+    //   const movieMongo = await getMovieById(collection, id);
+    //   console.log("movieMongo", movieMongo?.toObject())
+    // }
 
   }catch(error){
     console.log('erro conexão', error);
