@@ -58,14 +58,25 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+var net_1 = __importDefault(require("net"));
 var dotenv = __importStar(require("dotenv"));
 dotenv.config();
 var movies_pb_1 = require("./generated/src/proto/movies_pb");
 var mongodb_1 = require("mongodb");
+var createMovieProtobuf_1 = require("./utils/createMovieProtobuf");
+// SERVIDOR MONGO
 var uri = process.env.MONGO_URI || '';
 var database = process.env.DB_NAME || "sample_mflix";
 var table = process.env.COLLECTION_NAME || "movies";
+var db;
+var collection;
+// SERVIDOR SOCKET
+var port = 6666;
+var server = new net_1.default.Server();
 var client = new mongodb_1.MongoClient(uri, {
     serverApi: {
         version: mongodb_1.ServerApiVersion.v1,
@@ -73,79 +84,6 @@ var client = new mongodb_1.MongoClient(uri, {
         deprecationErrors: true,
     }
 });
-function createMovieProtobuf(movie) {
-    var _a, _b, _c, _d, _e, _f;
-    try {
-        var protoMovie = new movies_pb_1.Movie();
-        var protoGenres = (_a = movie.genres) === null || _a === void 0 ? void 0 : _a.map(function (value) {
-            var genre = new movies_pb_1.Genre();
-            genre.setName(value);
-            return genre;
-        });
-        var protoCasts = (_b = movie.cast) === null || _b === void 0 ? void 0 : _b.map(function (value) {
-            var cast = new movies_pb_1.Cast();
-            cast.setActor(value);
-            return cast;
-        });
-        var protoLanguages = (_c = movie.languages) === null || _c === void 0 ? void 0 : _c.map(function (value) {
-            var language = new movies_pb_1.Language();
-            language.setName(value);
-            return language;
-        });
-        var protoDirectors = (_d = movie.directors) === null || _d === void 0 ? void 0 : _d.map(function (value) {
-            var director = new movies_pb_1.Director();
-            director.setName(value);
-            return director;
-        });
-        var protoWriters = (_e = movie.writers) === null || _e === void 0 ? void 0 : _e.map(function (value) {
-            var writer = new movies_pb_1.Writer();
-            writer.setName(value);
-            return writer;
-        });
-        var protoCountries = (_f = movie.countries) === null || _f === void 0 ? void 0 : _f.map(function (value) {
-            var contry = new movies_pb_1.Country();
-            contry.setName(value);
-            return contry;
-        });
-        protoMovie.setId(String(movie._id));
-        if (movie === null || movie === void 0 ? void 0 : movie.plot)
-            protoMovie.setPlot(movie.plot);
-        if (protoGenres)
-            protoMovie.setGenresList(protoGenres);
-        if (movie === null || movie === void 0 ? void 0 : movie.runtime)
-            protoMovie.setRuntime(movie.runtime);
-        if (protoCasts)
-            protoMovie.setCastList(protoCasts);
-        if (movie === null || movie === void 0 ? void 0 : movie.numMFlixComments)
-            protoMovie.setNumMflixComments(movie.numMFlixComments);
-        if (movie === null || movie === void 0 ? void 0 : movie.poster)
-            protoMovie.setPoster(movie.poster);
-        if (movie === null || movie === void 0 ? void 0 : movie.title)
-            protoMovie.setTitle(movie.title);
-        if (movie === null || movie === void 0 ? void 0 : movie.fullplot)
-            protoMovie.setFullplot(movie.fullplot);
-        if (protoLanguages)
-            protoMovie.setLanguagesList(protoLanguages);
-        if (movie === null || movie === void 0 ? void 0 : movie.released)
-            protoMovie.setReleased(movie.released);
-        if (protoDirectors)
-            protoMovie.setDirectorsList(protoDirectors);
-        if (protoWriters)
-            protoMovie.setWritersList(protoWriters);
-        if (movie === null || movie === void 0 ? void 0 : movie.lastupdated)
-            protoMovie.setLastupdated(movie.lastupdated);
-        if (movie === null || movie === void 0 ? void 0 : movie.year)
-            protoMovie.setYear(movie.year);
-        if (protoCountries)
-            protoMovie.setCountriesList(protoCountries);
-        if (movie === null || movie === void 0 ? void 0 : movie.type)
-            protoMovie.setType(movie.type);
-        return protoMovie;
-    }
-    catch (error) {
-        throw error;
-    }
-}
 function getMovieById(collections, id) {
     return __awaiter(this, void 0, void 0, function () {
         var query, mongoMovie, protoMovie, error_1;
@@ -159,7 +97,7 @@ function getMovieById(collections, id) {
                     mongoMovie = _a.sent();
                     if (!mongoMovie)
                         return [2 /*return*/, null];
-                    protoMovie = createMovieProtobuf(mongoMovie);
+                    protoMovie = (0, createMovieProtobuf_1.createMovieProtobuf)(mongoMovie);
                     return [2 /*return*/, protoMovie];
                 case 2:
                     error_1 = _a.sent();
@@ -202,7 +140,7 @@ function getAllMovies(collection) {
                     return [4 /*yield*/, collection.find({}).toArray()];
                 case 1:
                     moviesMongo = _a.sent();
-                    protoMovies = moviesMongo.map(function (item) { return createMovieProtobuf(item); });
+                    protoMovies = moviesMongo.map(function (item) { return (0, createMovieProtobuf_1.createMovieProtobuf)(item); });
                     return [2 /*return*/, protoMovies];
                 case 2:
                     error_3 = _a.sent();
@@ -252,67 +190,255 @@ function createMovie(collection, movie) {
         });
     });
 }
-function createFakeMovieInBytes() {
-    var fakeProtoMovie = new movies_pb_1.Movie();
-    var genre = new movies_pb_1.Genre();
-    genre.setName("genre 1");
-    var cast = new movies_pb_1.Cast();
-    cast.setActor("jhonatan");
-    var country = new movies_pb_1.Country();
-    country.setName("country");
-    var director = new movies_pb_1.Director();
-    director.setName("diretor jhonatan");
-    fakeProtoMovie.setPlot("plot");
-    fakeProtoMovie.setGenresList([genre]);
-    fakeProtoMovie.setRuntime(1);
-    fakeProtoMovie.setCastList([cast]);
-    fakeProtoMovie.setNumMflixComments(20);
-    fakeProtoMovie.setTitle("Titulo");
-    fakeProtoMovie.setFullplot("fullplot");
-    fakeProtoMovie.setCountriesList([country]);
-    fakeProtoMovie.setReleased("1893-05-09T00:00:00.000Z");
-    fakeProtoMovie.setDirectorsList([director]);
-    fakeProtoMovie.setRated("UNRATED");
-    fakeProtoMovie.setLastupdated("2015-08-26 00:03:50.133000000");
-    fakeProtoMovie.setYear("2023");
-    fakeProtoMovie.setType("movie");
-    return fakeProtoMovie.serializeBinary();
-}
-function run() {
+function getMoviesByGenre(collection, genre) {
     return __awaiter(this, void 0, void 0, function () {
-        var db, collection, binaryMovie, protoMovie, id, movieMongo, error_5;
+        var value, query, moviesMongo, protoMovies, error_5;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 5, 6, 8]);
+                    _a.trys.push([0, 2, , 3]);
+                    value = genre.getName();
+                    query = { genres: { $elemMatch: { $eq: value } } };
+                    return [4 /*yield*/, collection.find(query).toArray()];
+                case 1:
+                    moviesMongo = _a.sent();
+                    protoMovies = moviesMongo.map(function (item) { return (0, createMovieProtobuf_1.createMovieProtobuf)(item); });
+                    return [2 /*return*/, protoMovies];
+                case 2:
+                    error_5 = _a.sent();
+                    return [2 /*return*/, []];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+function getMoviesByActor(collection, cast) {
+    return __awaiter(this, void 0, void 0, function () {
+        var actor, query, moviesMongo, protoMovies, error_6;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    actor = cast.getActor();
+                    query = { cast: { $elemMatch: { $eq: actor } } };
+                    return [4 /*yield*/, collection.find(query).toArray()];
+                case 1:
+                    moviesMongo = _a.sent();
+                    protoMovies = moviesMongo.map(function (item) { return (0, createMovieProtobuf_1.createMovieProtobuf)(item); });
+                    return [2 /*return*/, protoMovies];
+                case 2:
+                    error_6 = _a.sent();
+                    return [2 /*return*/, []];
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+function updateMovie(collection, movie) {
+    return __awaiter(this, void 0, void 0, function () {
+        var jsonMovie, id, acknowledged, error_7;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 2, , 3]);
+                    jsonMovie = movie.toObject();
+                    id = new mongodb_1.ObjectId(jsonMovie.id);
+                    return [4 /*yield*/, collection.updateOne({ _id: id }, { $set: {
+                                plot: jsonMovie.plot,
+                                genres: jsonMovie.genresList.map(function (obj) { return obj.name; }),
+                                runtime: jsonMovie.runtime,
+                                cast: jsonMovie.castList.map(function (obj) { return obj.actor; }),
+                                num_mflix_comments: jsonMovie.numMflixComments,
+                                title: jsonMovie.title,
+                                fullplot: jsonMovie.fullplot,
+                                countries: jsonMovie.countriesList.map(function (obj) { return obj.name; }),
+                                released: jsonMovie.released,
+                                directors: jsonMovie.directorsList.map(function (obj) { return obj.name; }),
+                                rated: jsonMovie.rated,
+                                lastupdate: jsonMovie.lastupdated,
+                                year: jsonMovie.year,
+                                type: jsonMovie.type,
+                                writers: jsonMovie.writersList.map(function (obj) { return obj.name; }),
+                                languages: jsonMovie.languagesList.map(function (obj) { return obj.name; }),
+                            } })];
+                case 1:
+                    acknowledged = (_a.sent()).acknowledged;
+                    return [2 /*return*/, acknowledged];
+                case 2:
+                    error_7 = _a.sent();
+                    throw error_7;
+                case 3: return [2 /*return*/];
+            }
+        });
+    });
+}
+var OP = {
+    'CREATE': 1,
+    'FIND_BY_ID': 2,
+    'UPDATE': 3,
+    'DELETE': 4,
+    'FIND_BY_ACTOR': 5,
+    'FIND_BY_CATEGORY': 6,
+};
+function handleSocketRequest(socket, req) {
+    return __awaiter(this, void 0, void 0, function () {
+        var protoResponse, id, movie, data, response, _a, createdMovie, cast, genre, error_8;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    protoResponse = new movies_pb_1.Response();
+                    _b.label = 1;
+                case 1:
+                    _b.trys.push([1, 20, , 21]);
+                    id = req.getRequestId();
+                    movie = req.getMovie();
+                    data = req.getData();
+                    response = void 0;
+                    protoResponse.setResponseId(id);
+                    _a = id;
+                    switch (_a) {
+                        case OP.CREATE: return [3 /*break*/, 2];
+                        case OP.FIND_BY_ID: return [3 /*break*/, 7];
+                        case OP.UPDATE: return [3 /*break*/, 9];
+                        case OP.DELETE: return [3 /*break*/, 12];
+                        case OP.FIND_BY_ACTOR: return [3 /*break*/, 14];
+                        case OP.FIND_BY_CATEGORY: return [3 /*break*/, 16];
+                    }
+                    return [3 /*break*/, 18];
+                case 2:
+                    if (!movie) return [3 /*break*/, 6];
+                    return [4 /*yield*/, createMovie(collection, movie)];
+                case 3:
+                    response = _b.sent();
+                    if (!!response) return [3 /*break*/, 4];
+                    protoResponse.setMessage("Erro na tentativa de cria\u00E7\u00E3o do filme");
+                    protoResponse.setSucess(false);
+                    return [3 /*break*/, 6];
+                case 4:
+                    protoResponse.setMessage("Filme criado com sucesso");
+                    protoResponse.setSucess(true);
+                    return [4 /*yield*/, getMovieById(collection, response)];
+                case 5:
+                    createdMovie = _b.sent();
+                    if (createdMovie)
+                        protoResponse.addMovies(createdMovie);
+                    _b.label = 6;
+                case 6: return [3 /*break*/, 19];
+                case 7: return [4 /*yield*/, getMovieById(collection, data)];
+                case 8:
+                    response = _b.sent();
+                    if (!response) {
+                        protoResponse.setMessage("Erro na busca do filme com o id ".concat(data));
+                        protoResponse.setSucess(false);
+                    }
+                    else {
+                        protoResponse.setMessage("Filme encontrado com sucesso");
+                        protoResponse.setSucess(true);
+                        protoResponse.addMovies(response);
+                    }
+                    return [3 /*break*/, 19];
+                case 9:
+                    if (!movie) return [3 /*break*/, 11];
+                    return [4 /*yield*/, updateMovie(collection, movie)];
+                case 10:
+                    response = _b.sent();
+                    if (!response) {
+                        protoResponse.setMessage("Erro na tentativa de atualiza\u00E7\u00E3o do filme com o id ".concat(movie.getId()));
+                        protoResponse.setSucess(false);
+                    }
+                    else {
+                        protoResponse.setMessage("Filme atualizado com sucesso");
+                        protoResponse.setSucess(true);
+                        protoResponse.addMovies(movie);
+                    }
+                    _b.label = 11;
+                case 11: return [3 /*break*/, 19];
+                case 12: return [4 /*yield*/, deleteMovie(collection, data)];
+                case 13:
+                    response = _b.sent();
+                    if (!response) {
+                        protoResponse.setMessage("Erro na tentativa de dele\u00E7\u00E3o do filme com o id ".concat(data));
+                        protoResponse.setSucess(false);
+                    }
+                    else {
+                        protoResponse.setMessage("Filme deletado com sucesso");
+                        protoResponse.setSucess(true);
+                    }
+                    return [3 /*break*/, 19];
+                case 14:
+                    cast = new movies_pb_1.Cast();
+                    cast.setActor(data);
+                    return [4 /*yield*/, getMoviesByActor(collection, cast)];
+                case 15:
+                    response = _b.sent();
+                    response.map(function (movie) { return protoResponse.addMovies(movie); });
+                    if (!response.length) {
+                        protoResponse.setMessage("Nenhum filme do ator ".concat(data, " foi encontrado"));
+                        protoResponse.setSucess(false);
+                    }
+                    else {
+                        protoResponse.setMessage("Busca conclu\u00EDda com sucesso");
+                        protoResponse.setSucess(true);
+                    }
+                    return [3 /*break*/, 19];
+                case 16:
+                    genre = new movies_pb_1.Genre();
+                    genre.setName(data);
+                    return [4 /*yield*/, getMoviesByGenre(collection, genre)];
+                case 17:
+                    response = _b.sent();
+                    response.map(function (movie) { return protoResponse.addMovies(movie); });
+                    if (!response.length) {
+                        protoResponse.setMessage("Nenhum filme da categoria ".concat(data, " foi encontrado"));
+                        protoResponse.setSucess(false);
+                    }
+                    else {
+                        protoResponse.setMessage("Busca conclu\u00EDda com sucesso");
+                        protoResponse.setSucess(true);
+                    }
+                    return [3 /*break*/, 19];
+                case 18:
+                    protoResponse.setMessage("Identificador de requisi\u00E7\u00E3o inv\u00E1lido (".concat(id, ")"));
+                    protoResponse.setSucess(false);
+                    return [3 /*break*/, 19];
+                case 19:
+                    socket.write(protoResponse.serializeBinary());
+                    return [3 /*break*/, 21];
+                case 20:
+                    error_8 = _b.sent();
+                    console.log('error[handleSocketRequest]:', error_8);
+                    protoResponse.setMessage(JSON.stringify(error_8));
+                    protoResponse.setSucess(false);
+                    socket.write(protoResponse.serializeBinary());
+                    return [3 /*break*/, 21];
+                case 21: return [2 /*return*/];
+            }
+        });
+    });
+}
+server.listen(port, function () {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    console.log("Servidor socket TCP iniciado em http://localhost:".concat(port));
                     return [4 /*yield*/, client.connect()];
                 case 1:
                     _a.sent();
                     db = client.db(database);
                     collection = db.collection(table);
-                    binaryMovie = createFakeMovieInBytes();
-                    protoMovie = movies_pb_1.Movie.deserializeBinary(binaryMovie);
-                    return [4 /*yield*/, createMovie(collection, protoMovie)];
-                case 2:
-                    id = _a.sent();
-                    if (!id) return [3 /*break*/, 4];
-                    return [4 /*yield*/, getMovieById(collection, id)];
-                case 3:
-                    movieMongo = _a.sent();
-                    console.log("movieMongo", movieMongo === null || movieMongo === void 0 ? void 0 : movieMongo.toObject());
-                    _a.label = 4;
-                case 4: return [3 /*break*/, 8];
-                case 5:
-                    error_5 = _a.sent();
-                    console.log('erro conexão', error_5);
-                    return [3 /*break*/, 8];
-                case 6: return [4 /*yield*/, client.close()];
-                case 7:
-                    _a.sent();
-                    return [7 /*endfinally*/];
-                case 8: return [2 /*return*/];
+                    return [2 /*return*/];
             }
         });
     });
-}
-run().catch(function (error) { return console.dir(error); });
+});
+server.on('connection', function (socket) {
+    console.log('Uma nova conexão foi estabelecida.');
+    socket.on('data', function (chunk) {
+        var req = movies_pb_1.Request.deserializeBinary(chunk);
+        handleSocketRequest(socket, req);
+    });
+    socket.on('error', function (err) {
+        console.log("Error: ".concat(err));
+    });
+});

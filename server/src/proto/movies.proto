@@ -44,3 +44,16 @@ message Movie {
   repeated Country countries = 17;
   string type = 18;
 }
+
+message Request {
+  int32 request_id = 1;
+  Movie movie = 2;
+  string data = 3;
+}
+
+message Response {
+  int32 response_id = 1;
+  bool sucess = 2;
+  string message = 3;
+  repeated Movie movies = 4;
+}

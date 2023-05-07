@@ -223,3 +223,67 @@ export namespace Movie {
   }
 }
 
+export class Request extends jspb.Message {
+  getRequestId(): number;
+  setRequestId(value: number): void;
+
+  hasMovie(): boolean;
+  clearMovie(): void;
+  getMovie(): Movie | undefined;
+  setMovie(value?: Movie): void;
+
+  getData(): string;
+  setData(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Request.AsObject;
+  static toObject(includeInstance: boolean, msg: Request): Request.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: Request, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Request;
+  static deserializeBinaryFromReader(message: Request, reader: jspb.BinaryReader): Request;
+}
+
+export namespace Request {
+  export type AsObject = {
+    requestId: number,
+    movie?: Movie.AsObject,
+    data: string,
+  }
+}
+
+export class Response extends jspb.Message {
+  getResponseId(): number;
+  setResponseId(value: number): void;
+
+  getSucess(): boolean;
+  setSucess(value: boolean): void;
+
+  getMessage(): string;
+  setMessage(value: string): void;
+
+  clearMoviesList(): void;
+  getMoviesList(): Array<Movie>;
+  setMoviesList(value: Array<Movie>): void;
+  addMovies(value?: Movie, index?: number): Movie;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Response.AsObject;
+  static toObject(includeInstance: boolean, msg: Response): Response.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: Response, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Response;
+  static deserializeBinaryFromReader(message: Response, reader: jspb.BinaryReader): Response;
+}
+
+export namespace Response {
+  export type AsObject = {
+    responseId: number,
+    sucess: boolean,
+    message: string,
+    moviesList: Array<Movie.AsObject>,
+  }
+}
+
