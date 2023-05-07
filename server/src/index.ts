@@ -7,6 +7,15 @@ import {  MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
 import { Collection } from 'mongodb';
 import { createMovieProtobuf } from './utils/createMovieProtobuf';
 
+const OP = {
+  'CREATE': 1,
+  'FIND_BY_ID': 2,
+  'UPDATE': 3,
+  'DELETE': 4,
+  'FIND_BY_ACTOR': 5,
+  'FIND_BY_CATEGORY': 6,
+}
+
 // SERVIDOR MONGO
 const uri = process.env.MONGO_URI || '';
 const database = process.env.DB_NAME || "sample_mflix";
@@ -135,13 +144,13 @@ async function getMoviesByActor(collection: Collection, cast: Cast){
   }
 }
 
-async function updateMovie(collection: Collection, movie: Movie){
+async function updateMovie(collection: Collection, id: string, movie: Movie){
   try {
 
     const jsonMovie = movie.toObject();
-    const id = new ObjectId(jsonMovie.id);
+    const idObject = new ObjectId(id);
 
-    const { acknowledged } = await collection.updateOne({ _id: id }, { $set: {
+    const { acknowledged } = await collection.updateOne({ _id: idObject }, { $set: {
       plot: jsonMovie.plot,
       genres: jsonMovie.genresList.map(obj => obj.name),
       runtime: jsonMovie.runtime,
@@ -166,15 +175,6 @@ async function updateMovie(collection: Collection, movie: Movie){
   }
 }
 
-
-const OP = {
-  'CREATE': 1,
-  'FIND_BY_ID': 2,
-  'UPDATE': 3,
-  'DELETE': 4,
-  'FIND_BY_ACTOR': 5,
-  'FIND_BY_CATEGORY': 6,
-}
 
 async function handleSocketRequest(socket: Socket, req: Request){
   const protoResponse = new Response();
@@ -221,7 +221,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
         break;
       case OP.UPDATE:
           if(movie){
-            response = await updateMovie(collection, movie);
+            response = await updateMovie(collection, data, movie);
 
             if(!response){
               protoResponse.setMessage(`Erro na tentativa de atualização do filme com o id ${movie.getId()}`);
