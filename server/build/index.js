@@ -68,6 +68,14 @@ dotenv.config();
 var movies_pb_1 = require("./generated/src/proto/movies_pb");
 var mongodb_1 = require("mongodb");
 var createMovieProtobuf_1 = require("./utils/createMovieProtobuf");
+var OP = {
+    'CREATE': 1,
+    'FIND_BY_ID': 2,
+    'UPDATE': 3,
+    'DELETE': 4,
+    'FIND_BY_ACTOR': 5,
+    'FIND_BY_CATEGORY': 6,
+};
 // SERVIDOR MONGO
 var uri = process.env.MONGO_URI || '';
 var database = process.env.DB_NAME || "sample_mflix";
@@ -234,16 +242,16 @@ function getMoviesByActor(collection, cast) {
         });
     });
 }
-function updateMovie(collection, movie) {
+function updateMovie(collection, id, movie) {
     return __awaiter(this, void 0, void 0, function () {
-        var jsonMovie, id, acknowledged, error_7;
+        var jsonMovie, idObject, acknowledged, error_7;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
                     jsonMovie = movie.toObject();
-                    id = new mongodb_1.ObjectId(jsonMovie.id);
-                    return [4 /*yield*/, collection.updateOne({ _id: id }, { $set: {
+                    idObject = new mongodb_1.ObjectId(id);
+                    return [4 /*yield*/, collection.updateOne({ _id: idObject }, { $set: {
                                 plot: jsonMovie.plot,
                                 genres: jsonMovie.genresList.map(function (obj) { return obj.name; }),
                                 runtime: jsonMovie.runtime,
@@ -272,14 +280,6 @@ function updateMovie(collection, movie) {
         });
     });
 }
-var OP = {
-    'CREATE': 1,
-    'FIND_BY_ID': 2,
-    'UPDATE': 3,
-    'DELETE': 4,
-    'FIND_BY_ACTOR': 5,
-    'FIND_BY_CATEGORY': 6,
-};
 function handleSocketRequest(socket, req) {
     return __awaiter(this, void 0, void 0, function () {
         var protoResponse, id, movie, data, response, _a, createdMovie, cast, genre, error_8;
@@ -339,7 +339,7 @@ function handleSocketRequest(socket, req) {
                     return [3 /*break*/, 19];
                 case 9:
                     if (!movie) return [3 /*break*/, 11];
-                    return [4 /*yield*/, updateMovie(collection, movie)];
+                    return [4 /*yield*/, updateMovie(collection, data, movie)];
                 case 10:
                     response = _b.sent();
                     if (!response) {
@@ -435,6 +435,7 @@ server.listen(port, function () {
 server.on('connection', function (socket) {
     console.log('Uma nova conexão foi estabelecida.');
     socket.on('data', function (chunk) {
+        console.log('chunk', chunk);
         var req = movies_pb_1.Request.deserializeBinary(chunk);
         handleSocketRequest(socket, req);
     });
