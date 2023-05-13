@@ -190,7 +190,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
 
     switch(id){
         case OP.CREATE:
-            requestCreateValidation.validateSync(protoResponse.toObject())
+            requestCreateValidation.validateSync(req.toObject())
 
             if(movie){
                 response = await createMovie(collection, movie)
@@ -209,7 +209,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
 
             break;
         case OP.FIND_BY_ID:
-            requestGetValidation.validateSync(protoResponse.toObject())
+            requestGetValidation.validateSync(req.toObject())
 
             response = await getMovieById(collection, data)
 
@@ -224,7 +224,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
 
             break;
         case OP.UPDATE:
-            requestUpdateValidation.validateSync(protoResponse.toObject())
+            requestUpdateValidation.validateSync(req.toObject())
 
             if(movie){
             response = await updateMovie(collection, data, movie);
@@ -241,7 +241,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
             }
             break;
         case OP.DELETE:
-            requestDeleteValidation.validateSync(protoResponse.toObject())
+            requestDeleteValidation.validateSync(req.toObject())
 
             response = await deleteMovie(collection, data);
 
@@ -256,7 +256,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
             break;
         case OP.FIND_BY_ACTOR:
 
-            requestGetValidation.validateSync(protoResponse.toObject())
+            requestGetValidation.validateSync(req.toObject())
 
             const cast = new Cast();
             cast.setActor(data);
@@ -273,7 +273,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
 
             break;
         case OP.FIND_BY_CATEGORY:
-            requestGetValidation.validateSync(protoResponse.toObject())
+            requestGetValidation.validateSync(req.toObject())
 
             const genre = new Genre();
             genre.setName(data);
