@@ -282,12 +282,36 @@ async function handleSocketRequest(socket: Socket, req: Request){
         break;
       }
 
-      socket.write(protoResponse.serializeBinary());
+      // socket.write(protoResponse.serializeBinary());
+
+    const responseBytes = protoResponse.serializeBinary();
+    const chunkSize = 4096;
+    let offset;
+
+    for (offset = 0; offset < responseBytes.length; offset += chunkSize) {
+      if (offset > responseBytes.length) {
+        offset = responseBytes.length
+      }
+
+      const chunk = responseBytes.slice(offset, offset + chunkSize);
+      socket.write(chunk);
+    }
+
+    const endOfStreamMessage = "END_OF_STREAM";
+    socket.write(endOfStreamMessage);
   }catch(error){
     console.log('error[handleSocketRequest]:', error);
     protoResponse.setMessage(JSON.stringify(error));
     protoResponse.setSucess(false);
-    socket.write(protoResponse.serializeBinary());
+    // socket.write(protoResponse.serializeBinary());
+
+    const responseBytes = protoResponse.serializeBinary();
+    const chunkSize = 4096;
+
+    for (let offset = 0; offset < responseBytes.length; offset += chunkSize) {
+      const chunk = responseBytes.slice(offset, offset + chunkSize);
+      socket.write(chunk);
+    }
   }
 }
 

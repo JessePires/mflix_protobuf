@@ -282,7 +282,7 @@ function updateMovie(collection, id, movie) {
 }
 function handleSocketRequest(socket, req) {
     return __awaiter(this, void 0, void 0, function () {
-        var protoResponse, id, movie, data, response, _a, createdMovie, cast, genre, error_8;
+        var protoResponse, id, movie, data, response, _a, createdMovie, cast, genre, responseBytes, chunkSize, offset, chunk, endOfStreamMessage, error_8, responseBytes, chunkSize, offset, chunk;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -402,14 +402,30 @@ function handleSocketRequest(socket, req) {
                     protoResponse.setSucess(false);
                     return [3 /*break*/, 19];
                 case 19:
-                    socket.write(protoResponse.serializeBinary());
+                    responseBytes = protoResponse.serializeBinary();
+                    chunkSize = 4096;
+                    offset = void 0;
+                    for (offset = 0; offset < responseBytes.length; offset += chunkSize) {
+                        if (offset > responseBytes.length) {
+                            offset = responseBytes.length;
+                        }
+                        chunk = responseBytes.slice(offset, offset + chunkSize);
+                        socket.write(chunk);
+                    }
+                    endOfStreamMessage = "END_OF_STREAM";
+                    socket.write(endOfStreamMessage);
                     return [3 /*break*/, 21];
                 case 20:
                     error_8 = _b.sent();
                     console.log('error[handleSocketRequest]:', error_8);
                     protoResponse.setMessage(JSON.stringify(error_8));
                     protoResponse.setSucess(false);
-                    socket.write(protoResponse.serializeBinary());
+                    responseBytes = protoResponse.serializeBinary();
+                    chunkSize = 4096;
+                    for (offset = 0; offset < responseBytes.length; offset += chunkSize) {
+                        chunk = responseBytes.slice(offset, offset + chunkSize);
+                        socket.write(chunk);
+                    }
                     return [3 /*break*/, 21];
                 case 21: return [2 /*return*/];
             }

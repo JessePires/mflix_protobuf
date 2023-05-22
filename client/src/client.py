@@ -26,13 +26,17 @@ FIND_MOVIE_BY_CATEGORY_REQUEST_ID = 6
 def close(connection):
     connection.close()
 
-
 def send_request(connection, request_id, movie, data):
     request = Request()
     request.request_id = request_id
 
     if movie is not None:
-        request.movie.CopyFrom(movie)
+        # Assuming 'movie' is a list of Movie objects
+
+        if request_id == 1:
+            request.movie.CopyFrom(movie)
+        else:
+            request.movies.CopyFrom(movie)
 
     if data is not None:
         request.data = data
@@ -40,7 +44,17 @@ def send_request(connection, request_id, movie, data):
     request_bytes = request.SerializeToString()
 
     connection.sendall(request_bytes)
-    response = connection.recv(9000000)
+
+    # Receive the response data in chunks until all data is received
+    response = b""
+    buffer_size = 4096  # Adjust the buffer size as needed
+
+    while True:
+        data = connection.recv(buffer_size)
+        if data == b"END_OF_STREAM":
+            break
+
+        response += data
 
     response_message = Response()
     response_message.ParseFromString(response)
@@ -151,9 +165,11 @@ def create_movie(connection):
     create_movie_response = send_request(
         connection, CREATE_MOVIE_REQUEST_ID, movie, None)
 
-    print("\n\n------------------------------")
+    print("\n\n")
+    print("-" * len(create_movie_response.message))
     print(create_movie_response.message)
-    print("------------------------------\n\n")
+    print("-" * len(create_movie_response.message))
+    print("\n\n")
 
 
 def find_movie_by_id(connection):
@@ -162,7 +178,6 @@ def find_movie_by_id(connection):
     response = send_request(
         connection, FIND_MOVIE_BY_ID_REQUEST_ID, None, movie_id)
 
-    print(response.movies)
     print_movies(response.movies)
 
 
@@ -170,16 +185,34 @@ def update():
     print("update")
 
 
-def delete():
-    print("delete")
+def delete(connection):
+    movie_id = input("Informe o id do filme a ser deletado: ")
+
+    delete_movie_response = send_request(connection, DELETE_MOVIE_REQUEST_ID, None, movie_id)
+
+    print("\n\n")
+    print("-" * len(delete_movie_response.message))
+    print(delete_movie_response.message)
+    print("-" * len(delete_movie_response.message))
+    print("\n\n")
 
 
-def find_by_actor():
-    print("find by actor")
+def find_by_actor(connection):
+    actor_name = input("Informe o nome do ator: ")
+
+    response = send_request(
+        connection, FIND_MOVIE_BY_ACTOR_REQUEST_ID, None, actor_name)
+
+    print_movies(response.movies)
 
 
-def find_by_category():
-    print("find by category")
+def find_by_category(connection):
+    category_name = input("Informe a categoria: ")
+
+    response = send_request(
+        connection, FIND_MOVIE_BY_CATEGORY_REQUEST_ID, None, category_name)
+
+    print_movies(response.movies)
 
 
 def choose_option():
@@ -216,13 +249,13 @@ def main():
             update()
 
         elif option == 4:
-            delete()
+            delete(connection)
 
         elif option == 5:
-            find_by_actor()
+            find_by_actor(connection)
 
         elif option == 6:
-            find_by_category()
+            find_by_category(connection)
 
         elif option == 0:
             print("Finalizando conexão...")
