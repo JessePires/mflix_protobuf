@@ -1,3 +1,14 @@
+
+// Servidor protobuf
+// Descricao: Esta é o servidor que o cliente requisitará os dados referentes aos filmes
+
+// Alunos: Jhonatan Guilherme de Oliveira Cunha
+// Alunos: Jessé Pires Barbato Rocha
+
+// Data de Início: 04/04/2023
+// Data última atualização: 23/05/2023
+
+
 import Net, { Socket } from 'net'
 import * as dotenv from 'dotenv'
 dotenv.config()

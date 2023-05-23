@@ -4,6 +4,7 @@ Descricao: Esta é a aplicação que o usuário utilizará para requisitar
 as ações sobre os dados ao servidor 
 
 Alunos: Jhonatan Guilherme de Oliveira Cunha
+Alunos: Jessé Pires Barbato Rocha
 
 Data de Início: 04/04/2023
 Data última atualização: 23/05/2023
