@@ -1,4 +1,13 @@
+'''
+Client protobuf
+Descricao: Esta é a aplicação que o usuário utilizará para requisitar
+as ações sobre os dados ao servidor 
 
+Alunos: Jhonatan Guilherme de Oliveira Cunha
+
+Data de Início: 04/04/2023
+Data última atualização: 23/05/2023
+'''
 
 import socket
 
@@ -69,6 +78,8 @@ def send_request(connection, request_id, movie, data):
 # this function only prints the movies data, even if it's just one movie or a list
 def print_movies(movies):
     for movie in movies:
+        print("\n\n", movie, "\n\n")
+
         print("\n\n==========", movie.title, "==========")
         print("\nEnredo: ", movie.plot)
 

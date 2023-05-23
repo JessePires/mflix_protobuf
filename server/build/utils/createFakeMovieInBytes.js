@@ -32,6 +32,6 @@ function createFakeMovieInBytes() {
     fakeProtoMovie.setType("movie");
     fakeProtoMovie.setLanguagesList([language]);
     fakeProtoMovie.setWritersList([writer]);
-    return fakeProtoMovie.serializeBinary();
+    return fakeProtoMovie;
 }
 exports.createFakeMovieInBytes = createFakeMovieInBytes;
