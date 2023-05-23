@@ -78,8 +78,6 @@ def send_request(connection, request_id, movie, data):
 # this function only prints the movies data, even if it's just one movie or a list
 def print_movies(movies):
     for movie in movies:
-        print("\n\n", movie, "\n\n")
-
         print("\n\n==========", movie.title, "==========")
         print("\nEnredo: ", movie.plot)
 
