@@ -45,7 +45,9 @@ async function getMovieById(collections: Collection, id: string){
 
     if(!mongoMovie) return null;
 
+    console.log({mongoMovie});
     const protoMovie = createMovieProtobuf(mongoMovie);
+
 
     return protoMovie;
   } catch (error) {

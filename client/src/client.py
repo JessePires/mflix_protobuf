@@ -26,6 +26,7 @@ FIND_MOVIE_BY_CATEGORY_REQUEST_ID = 6
 def close(connection):
     connection.close()
 
+
 def send_request(connection, request_id, movie, data):
     request = Request()
     request.request_id = request_id
@@ -33,7 +34,7 @@ def send_request(connection, request_id, movie, data):
     if movie is not None:
         # Assuming 'movie' is a list of Movie objects
 
-        if request_id == 1:
+        if request_id == 1 or request_id == 3:
             request.movie.CopyFrom(movie)
         else:
             request.movies.CopyFrom(movie)
@@ -95,7 +96,16 @@ def print_movies(movies):
 
         print("Tipo do filme: ", movie.type)
 
-        print("\nEnredo completo: ", movie.fullplot, "\n\n")
+        print("Classificação: ", movie.rated)
+
+        print("\nEnredo completo: ", movie.fullplot)
+
+def print_message(message):
+    print("\n")
+    print("-" * len(message))
+    print(message)
+    print("-" * len(message))
+    print("\n")
 
 
 def create_movie(connection):
@@ -110,7 +120,7 @@ def create_movie(connection):
         movie.genres.append(new_genre)
 
     movie.runtime = int(input("Informe a duração do filme em minutos: "))
-    movie.rated = input("Informe a avaliação do filme: ")
+    movie.rated = input("Informe a classificação do filme: ")
 
     cast = input(
         "Informe os nomes dos atores que fazem parte do elenco: ").split(" ")
@@ -165,11 +175,7 @@ def create_movie(connection):
     create_movie_response = send_request(
         connection, CREATE_MOVIE_REQUEST_ID, movie, None)
 
-    print("\n\n")
-    print("-" * len(create_movie_response.message))
-    print(create_movie_response.message)
-    print("-" * len(create_movie_response.message))
-    print("\n\n")
+    print_message(create_movie_response.message)  
 
 
 def find_movie_by_id(connection):
@@ -181,8 +187,113 @@ def find_movie_by_id(connection):
     print_movies(response.movies)
 
 
-def update():
-    print("update")
+def update(connection):
+    movie_id = input("Informe o id do filme: ")
+    
+    founded_movie = send_request(connection, FIND_MOVIE_BY_ID_REQUEST_ID, None, movie_id)
+    founded_movie = founded_movie.movies[0]
+
+    update_message = "Informe os dados a serem atualizados (Caso deseje manter algum deles, basta não preencher o campo)"
+    print_message(update_message)
+
+    plot = input("Fale sobre a história do filme: ")
+    founded_movie.plot = plot if plot.strip() != "" else founded_movie.plot
+
+    genres = input(
+        "Informe os gêneros do filme separados por espaço: ").split(" ")
+
+    if len(genres) > 0 and genres[0] != "":
+        del founded_movie.genres[:]
+
+        for genre in genres:
+            new_genre = Genre()
+            new_genre.name = genre
+            founded_movie.genres.append(new_genre)
+
+    runtime = input("Informe a duração do filme em minutos: ")
+    founded_movie.runtime = int(runtime) if runtime.strip() != "" else founded_movie.runtime
+
+    rated = input("Informe a classificação do filme: ")
+    founded_movie.rated = rated if rated.strip() != "" else founded_movie.rated
+
+
+    cast = input(
+        "Informe os nomes dos atores que fazem parte do elenco: ").split(" ")
+
+    if len(cast) > 0 and cast[0] != "":
+        del founded_movie.cast[:]
+        
+        for actor in cast:
+            new_actor = Cast()
+            new_actor.actor = actor
+            founded_movie.cast.append(new_actor)
+
+    num_mflix_comments = input("Informe a quantidade de comentários: ")
+    founded_movie.num_mflix_comments = int(num_mflix_comments) if num_mflix_comments.strip() != "" else founded_movie.num_mflix_comments
+    
+    poster = input("Informe o link para a URL do poster filme: ")
+    founded_movie.poster = poster if poster != "" else founded_movie.poster
+    
+    title = input("Informe o título do filme: ")
+    founded_movie.title = title if title.strip() != "" else founded_movie.title
+    
+    fullplot = input("Informe a sinopse completa do filme: ")
+    founded_movie.fullplot = fullplot if fullplot.strip() != "" else founded_movie.fullplot
+
+    year = input("Informe o ano de criação do filme: ")
+    founded_movie.year = int(year) if year.strip() != "" else founded_movie.year
+
+    languages = input(
+        "Informe os idiomas em que o filme está disponível: ").split(" ")
+
+    if len(languages) > 0 and languages[0] != "":
+        del founded_movie.languages[:]
+
+        for language in languages:
+            new_language = Language()
+            new_language.name = language
+            founded_movie.languages.append(new_language)
+
+    released = input("Informe a data de lançamento: ")
+    founded_movie.released = int(released) if released.strip() != "" else founded_movie.released
+
+    directors = input("Informe os diretores do filme: ").split(" ")
+
+    if len(directors) > 0 and directors[0] != "":
+        del founded_movie.directors[:]
+
+        for director in directors:
+            new_director = Director()
+            new_director.name = director
+            founded_movie.directors.append(new_director)
+
+    writers = input("Informe os escritores do filme: ").split(" ")
+
+    if len(writers) > 0 and writers[0] != "":
+        del founded_movie.writers[:]
+
+        for writer in writers:
+            new_writer = Writer()
+            new_writer.name = writer
+            founded_movie.writers.append(new_writer)
+
+    countries = input(
+        "Informe os países em que o filme está disponível: ").split(" ")
+
+    if len(countries) > 0 and countries[0] != "":
+        del founded_movie.countries[:]
+
+        for country in countries:
+            new_country = Country()
+            new_country.name = country
+            founded_movie.countries.append(new_country)
+
+    movie_type = input("Informe o tipo do filme: ")
+    founded_movie.type = movie_type if movie_type.strip() != "" else founded_movie.type
+
+    update_response = send_request(connection, UPDATE_MOVIE_REQUEST_ID, founded_movie, movie_id)
+
+    print_message(update_response.message)
 
 
 def delete(connection):
@@ -190,12 +301,8 @@ def delete(connection):
 
     delete_movie_response = send_request(connection, DELETE_MOVIE_REQUEST_ID, None, movie_id)
 
-    print("\n\n")
-    print("-" * len(delete_movie_response.message))
-    print(delete_movie_response.message)
-    print("-" * len(delete_movie_response.message))
-    print("\n\n")
-
+    print_message(delete_movie_response.message)
+    
 
 def find_by_actor(connection):
     actor_name = input("Informe o nome do ator: ")
@@ -246,7 +353,7 @@ def main():
             find_movie_by_id(connection)
 
         elif option == 3:
-            update()
+            update(connection)
 
         elif option == 4:
             delete(connection)
