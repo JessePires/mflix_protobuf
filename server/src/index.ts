@@ -42,11 +42,14 @@ const client = new MongoClient(uri,  {
 
 async function getMovieById(collections: Collection, id: string){
     try {
+        // Monta a query para buscar o filme pelo id
         const query = { _id: new ObjectId(id) };
+
         const mongoMovie = await collections.findOne(query);
 
         if(!mongoMovie) return null;
 
+        // Cria o movie protobuf para a resposta
         const protoMovie = createMovieProtobuf(mongoMovie)
 
         return protoMovie;
@@ -73,6 +76,8 @@ async function deleteMovie(collections: Collection, id: string): Promise<boolean
 async function getAllMovies(collection: Collection){
     try {
         const moviesMongo = await collection.find({}).toArray();
+
+        // Cria o array de movies protobuf para a resposta
         const protoMovies = moviesMongo.map(item => createMovieProtobuf(item));
 
         return protoMovies;
@@ -117,9 +122,13 @@ async function getMoviesByGenre(collection: Collection, genre: Genre){
     try {
 
         const value = genre.getName();
+
+        // Monta a query de buscar filmes que contem o genero repassado
         const query = { genres: { $elemMatch: { $eq: value } } };
 
         const moviesMongo = await collection.find(query).toArray();
+
+        // Cria o array de movies protobuf para a resposta
         const protoMovies = moviesMongo.map(item => createMovieProtobuf(item));
 
         return protoMovies;
@@ -133,9 +142,12 @@ async function getMoviesByActor(collection: Collection, cast: Cast){
 
         const actor = cast.getActor();
 
+        // Monta a query de buscar filmes que contem o ator repassado
         const query = { cast: { $elemMatch: { $eq: actor } } };
 
         const moviesMongo = await collection.find(query).toArray();
+
+        // Cria o array de movies protobuf para a resposta
         const protoMovies = moviesMongo.map(item => createMovieProtobuf(item));
 
         return protoMovies;
@@ -150,6 +162,7 @@ async function updateMovie(collection: Collection, id: string, movie: Movie){
         const jsonMovie = movie.toObject();
         const idObject = new ObjectId(id);
 
+        // Realiza a operação de update
         const { acknowledged } = await collection.updateOne({ _id: idObject }, { $set: {
             plot: jsonMovie.plot,
             genres: jsonMovie.genresList.map(obj => obj.name),
@@ -187,7 +200,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
     let response;
     protoResponse.setResponseId(id);
 
-
+    // Com base no id da requisição encaminha para a função correta
     switch(id){
         case OP.CREATE:
             requestCreateValidation.validateSync(req.toObject())
