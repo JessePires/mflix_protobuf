@@ -1,5 +1,4 @@
 import socket
-from datetime import datetime
 
 from generated.movies_pb2 import Request
 from generated.movies_pb2 import Response
@@ -15,6 +14,7 @@ from generated.movies_pb2 import Country
 HOST = '127.0.0.1'
 PORT = 6666
 
+# create constants to the request ids
 CREATE_MOVIE_REQUEST_ID = 1
 FIND_MOVIE_BY_ID_REQUEST_ID = 2
 UPDATE_MOVIE_REQUEST_ID = 3
@@ -22,18 +22,18 @@ DELETE_MOVIE_REQUEST_ID = 4
 FIND_MOVIE_BY_ACTOR_REQUEST_ID = 5
 FIND_MOVIE_BY_CATEGORY_REQUEST_ID = 6
 
-
+# this function only wraps the connection closing
 def close(connection):
     connection.close()
 
 
 def send_request(connection, request_id, movie, data):
+    # create a new request
     request = Request()
     request.request_id = request_id
 
     if movie is not None:
-        # Assuming 'movie' is a list of Movie objects
-
+        # Handle if movie is a list of Movie objects or a unique object
         if request_id == 1 or request_id == 3:
             request.movie.CopyFrom(movie)
         else:
@@ -42,14 +42,15 @@ def send_request(connection, request_id, movie, data):
     if data is not None:
         request.data = data
 
-    request_bytes = request.SerializeToString()
+    request_bytes = request.SerializeToString() # serializing request to send him to the server
 
-    connection.sendall(request_bytes)
+    connection.sendall(request_bytes) # send request
 
     # Receive the response data in chunks until all data is received
     response = b""
     buffer_size = 4096  # Adjust the buffer size as needed
 
+    # receive data until there is nothing left
     while True:
         data = connection.recv(buffer_size)
         if data == b"END_OF_STREAM":
@@ -58,11 +59,12 @@ def send_request(connection, request_id, movie, data):
         response += data
 
     response_message = Response()
-    response_message.ParseFromString(response)
+    response_message.ParseFromString(response) # Serializing data to Response type
 
     return response_message
 
 
+# this function only prints the movies data, even if it's just one movie or a list
 def print_movies(movies):
     for movie in movies:
         print("\n\n==========", movie.title, "==========")
@@ -100,6 +102,8 @@ def print_movies(movies):
 
         print("\nEnredo completo: ", movie.fullplot)
 
+
+# auxiliary function to print messages (to avoid code duplication)
 def print_message(message):
     print("\n")
     print("-" * len(message))
@@ -109,7 +113,9 @@ def print_message(message):
 
 
 def create_movie(connection):
-    movie = Movie()
+    movie = Movie() # create a new movie 
+
+    #get movie data
     movie.plot = input("Fale sobre a história do filme: ")
     genres = input(
         "Informe os gêneros do filme separados por espaço: ").split(" ")
@@ -172,6 +178,7 @@ def create_movie(connection):
 
     movie.type = input("Informe o tipo do filme: ")
 
+    # send request to create new movie
     create_movie_response = send_request(
         connection, CREATE_MOVIE_REQUEST_ID, movie, None)
 
@@ -179,20 +186,24 @@ def create_movie(connection):
 
 
 def find_movie_by_id(connection):
-    movie_id = input("Informe o id do filme: ")
+    movie_id = input("Informe o id do filme: ") # get the movie id
 
     response = send_request(
-        connection, FIND_MOVIE_BY_ID_REQUEST_ID, None, movie_id)
+        connection, FIND_MOVIE_BY_ID_REQUEST_ID, None, movie_id) # send request to find movie
 
+    # show movie data
     print_movies(response.movies)
 
 
 def update(connection):
-    movie_id = input("Informe o id do filme: ")
+    movie_id = input("Informe o id do filme: ") # get movie id
     
-    founded_movie = send_request(connection, FIND_MOVIE_BY_ID_REQUEST_ID, None, movie_id)
+    founded_movie = send_request(connection, FIND_MOVIE_BY_ID_REQUEST_ID, None, movie_id) # get movie based on id
+
+    # since the ids are unique, only one movie will be returned, so we get him in the first list position
     founded_movie = founded_movie.movies[0]
 
+    # get data that will be updated
     update_message = "Informe os dados a serem atualizados (Caso deseje manter algum deles, basta não preencher o campo)"
     print_message(update_message)
 
@@ -291,22 +302,25 @@ def update(connection):
     movie_type = input("Informe o tipo do filme: ")
     founded_movie.type = movie_type if movie_type.strip() != "" else founded_movie.type
 
+    # send request to update movie data
     update_response = send_request(connection, UPDATE_MOVIE_REQUEST_ID, founded_movie, movie_id)
 
     print_message(update_response.message)
 
 
 def delete(connection):
-    movie_id = input("Informe o id do filme a ser deletado: ")
+    movie_id = input("Informe o id do filme a ser deletado: ") # get movie id
 
+    # send request to delete movie based on id
     delete_movie_response = send_request(connection, DELETE_MOVIE_REQUEST_ID, None, movie_id)
 
     print_message(delete_movie_response.message)
     
 
 def find_by_actor(connection):
-    actor_name = input("Informe o nome do ator: ")
+    actor_name = input("Informe o nome do ator: ") # get actor name
 
+    # send request to find movie based on actor name
     response = send_request(
         connection, FIND_MOVIE_BY_ACTOR_REQUEST_ID, None, actor_name)
 
@@ -314,14 +328,16 @@ def find_by_actor(connection):
 
 
 def find_by_category(connection):
-    category_name = input("Informe a categoria: ")
+    category_name = input("Informe a categoria: ") # get category name
 
+    # send request to find movie based on category name
     response = send_request(
         connection, FIND_MOVIE_BY_CATEGORY_REQUEST_ID, None, category_name)
 
     print_movies(response.movies)
 
 
+# this function only shows the options that users have 
 def choose_option():
     print("\n\n--------------------Escolha uma opção--------------------")
     print("0 -> Encerra a execução")
@@ -339,37 +355,39 @@ def choose_option():
 
 
 def main():
+    # establishing connection with server
     connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection.connect((HOST, PORT))
     print("Estabelecendo conexão com o servidor...")
 
-    option = choose_option()
+    choosen_option = choose_option() # choosing the option
 
+    # handle users option choose
     while (True):
-        if option == 1:
+        if choosen_option == 1:
             create_movie(connection)
 
-        elif option == 2:
+        elif choosen_option == 2:
             find_movie_by_id(connection)
 
-        elif option == 3:
+        elif choosen_option == 3:
             update(connection)
 
-        elif option == 4:
+        elif choosen_option == 4:
             delete(connection)
 
-        elif option == 5:
+        elif choosen_option == 5:
             find_by_actor(connection)
 
-        elif option == 6:
+        elif choosen_option == 6:
             find_by_category(connection)
 
-        elif option == 0:
+        elif choosen_option == 0:
             print("Finalizando conexão...")
             close(connection)
             break
 
-        option = choose_option()
+        choosen_option = choose_option()
 
 
 main()
