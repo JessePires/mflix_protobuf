@@ -105,6 +105,7 @@ function getMovieById(collections, id) {
                     mongoMovie = _a.sent();
                     if (!mongoMovie)
                         return [2 /*return*/, null];
+                    console.log({ mongoMovie: mongoMovie });
                     protoMovie = (0, createMovieProtobuf_1.createMovieProtobuf)(mongoMovie);
                     return [2 /*return*/, protoMovie];
                 case 2:
