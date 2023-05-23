@@ -1,6 +1,7 @@
 import { Cast, Country, Director, Genre, Language, Movie, Writer } from "../generated/src/proto/movies_pb";
 
-export function createFakeMovieInBytes(){
+
+export function createFakeMovieProtobuf(){
   const fakeProtoMovie = new Movie();
 
   const genre = new Genre();
