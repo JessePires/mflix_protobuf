@@ -58,6 +58,7 @@ export function createMovieProtobuf(movie: WithId<Document>): Movie{
     if(movie?.year) protoMovie.setYear(movie.year);
     if(protoCountries) protoMovie.setCountriesList(protoCountries);
     if(movie?.type) protoMovie.setType(movie.type);
+    if(movie?.rated) protoMovie.setRated(movie.rated);
 
 
     return protoMovie;

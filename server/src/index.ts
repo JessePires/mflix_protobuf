@@ -203,6 +203,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
     // Com base no id da requisição encaminha para a função correta
     switch(id){
         case OP.CREATE:
+            console.log("Aqui");
             requestCreateValidation.validateSync(req.toObject())
 
             if(movie){
@@ -222,8 +223,6 @@ async function handleSocketRequest(socket: Socket, req: Request){
 
             break;
         case OP.FIND_BY_ID:
-            requestGetValidation.validateSync(req.toObject())
-
             response = await getMovieById(collection, data)
 
             if(!response){
@@ -268,9 +267,6 @@ async function handleSocketRequest(socket: Socket, req: Request){
 
             break;
         case OP.FIND_BY_ACTOR:
-
-            requestGetValidation.validateSync(req.toObject())
-
             const cast = new Cast();
             cast.setActor(data);
             response = await getMoviesByActor(collection, cast);
@@ -286,8 +282,6 @@ async function handleSocketRequest(socket: Socket, req: Request){
 
             break;
         case OP.FIND_BY_CATEGORY:
-            requestGetValidation.validateSync(req.toObject())
-
             const genre = new Genre();
             genre.setName(data);
             response = await getMoviesByGenre(collection, genre);
@@ -307,12 +301,39 @@ async function handleSocketRequest(socket: Socket, req: Request){
         break;
     }
 
-    socket.write(protoResponse.serializeBinary());
+    // socket.write(protoResponse.serializeBinary());
+    const responseBytes = protoResponse.serializeBinary();
+    const chunkSize = 4096;
+    let offset;
+
+    for (offset = 0; offset < responseBytes.length; offset += chunkSize) {
+      if (offset > responseBytes.length) {
+        offset = responseBytes.length
+      }
+
+      const chunk = responseBytes.slice(offset, offset + chunkSize);
+      socket.write(chunk);
+    }
+
+    const endOfStreamMessage = "END_OF_STREAM";
+    socket.write(endOfStreamMessage);
   }catch(error){
-    if (error instanceof ValidationError) {
-      protoResponse.setMessage(error.message);
-      protoResponse.setSucess(false);
-      socket.write(protoResponse.serializeBinary());
+    // if (error instanceof ValidationError) {
+    //   protoResponse.setMessage(error.message);
+    //   protoResponse.setSucess(false);
+    //   socket.write(protoResponse.serializeBinary());
+    // }
+    console.log('error[handleSocketRequest]:', error);
+    protoResponse.setMessage(JSON.stringify(error));
+    protoResponse.setSucess(false);
+    // socket.write(protoResponse.serializeBinary());
+
+    const responseBytes = protoResponse.serializeBinary();
+    const chunkSize = 4096;
+
+    for (let offset = 0; offset < responseBytes.length; offset += chunkSize) {
+      const chunk = responseBytes.slice(offset, offset + chunkSize);
+      socket.write(chunk);
     }
   }
 }

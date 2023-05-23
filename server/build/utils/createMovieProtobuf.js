@@ -69,6 +69,8 @@ function createMovieProtobuf(movie) {
             protoMovie.setCountriesList(protoCountries);
         if (movie === null || movie === void 0 ? void 0 : movie.type)
             protoMovie.setType(movie.type);
+        if (movie === null || movie === void 0 ? void 0 : movie.rated)
+            protoMovie.setRated(movie.rated);
         return protoMovie;
     }
     catch (error) {

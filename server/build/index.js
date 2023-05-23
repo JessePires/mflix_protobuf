@@ -68,6 +68,7 @@ dotenv.config();
 var movies_pb_1 = require("./generated/src/proto/movies_pb");
 var mongodb_1 = require("mongodb");
 var createMovieProtobuf_1 = require("./utils/createMovieProtobuf");
+var validation_1 = require("./validation");
 var OP = {
     'CREATE': 1,
     'FIND_BY_ID': 2,
@@ -191,7 +192,6 @@ function createMovie(collection, movie) {
                     return [2 /*return*/, String(created.insertedId)];
                 case 2:
                     error_4 = _a.sent();
-                    console.log('error', error_4);
                     return [2 /*return*/, null];
                 case 3: return [2 /*return*/];
             }
@@ -282,7 +282,7 @@ function updateMovie(collection, id, movie) {
 }
 function handleSocketRequest(socket, req) {
     return __awaiter(this, void 0, void 0, function () {
-        var protoResponse, id, movie, data, response, _a, createdMovie, cast, genre, error_8;
+        var protoResponse, id, movie, data, response, _a, createdMovie, cast, genre, error_8, responseBytes, chunkSize, offset, chunk;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -306,6 +306,8 @@ function handleSocketRequest(socket, req) {
                     }
                     return [3 /*break*/, 18];
                 case 2:
+                    console.log("Aqui");
+                    validation_1.requestCreateValidation.validateSync(req.toObject());
                     if (!movie) return [3 /*break*/, 6];
                     return [4 /*yield*/, createMovie(collection, movie)];
                 case 3:
@@ -324,7 +326,9 @@ function handleSocketRequest(socket, req) {
                         protoResponse.addMovies(createdMovie);
                     _b.label = 6;
                 case 6: return [3 /*break*/, 19];
-                case 7: return [4 /*yield*/, getMovieById(collection, data)];
+                case 7:
+                    validation_1.requestGetValidation.validateSync(req.toObject());
+                    return [4 /*yield*/, getMovieById(collection, data)];
                 case 8:
                     response = _b.sent();
                     if (!response) {
@@ -338,6 +342,7 @@ function handleSocketRequest(socket, req) {
                     }
                     return [3 /*break*/, 19];
                 case 9:
+                    validation_1.requestUpdateValidation.validateSync(req.toObject());
                     if (!movie) return [3 /*break*/, 11];
                     return [4 /*yield*/, updateMovie(collection, data, movie)];
                 case 10:
@@ -353,7 +358,9 @@ function handleSocketRequest(socket, req) {
                     }
                     _b.label = 11;
                 case 11: return [3 /*break*/, 19];
-                case 12: return [4 /*yield*/, deleteMovie(collection, data)];
+                case 12:
+                    validation_1.requestDeleteValidation.validateSync(req.toObject());
+                    return [4 /*yield*/, deleteMovie(collection, data)];
                 case 13:
                     response = _b.sent();
                     if (!response) {
@@ -366,6 +373,7 @@ function handleSocketRequest(socket, req) {
                     }
                     return [3 /*break*/, 19];
                 case 14:
+                    validation_1.requestGetValidation.validateSync(req.toObject());
                     cast = new movies_pb_1.Cast();
                     cast.setActor(data);
                     return [4 /*yield*/, getMoviesByActor(collection, cast)];
@@ -382,6 +390,7 @@ function handleSocketRequest(socket, req) {
                     }
                     return [3 /*break*/, 19];
                 case 16:
+                    validation_1.requestGetValidation.validateSync(req.toObject());
                     genre = new movies_pb_1.Genre();
                     genre.setName(data);
                     return [4 /*yield*/, getMoviesByGenre(collection, genre)];
@@ -406,10 +415,20 @@ function handleSocketRequest(socket, req) {
                     return [3 /*break*/, 21];
                 case 20:
                     error_8 = _b.sent();
+                    // if (error instanceof ValidationError) {
+                    //   protoResponse.setMessage(error.message);
+                    //   protoResponse.setSucess(false);
+                    //   socket.write(protoResponse.serializeBinary());
+                    // }
                     console.log('error[handleSocketRequest]:', error_8);
                     protoResponse.setMessage(JSON.stringify(error_8));
                     protoResponse.setSucess(false);
-                    socket.write(protoResponse.serializeBinary());
+                    responseBytes = protoResponse.serializeBinary();
+                    chunkSize = 4096;
+                    for (offset = 0; offset < responseBytes.length; offset += chunkSize) {
+                        chunk = responseBytes.slice(offset, offset + chunkSize);
+                        socket.write(chunk);
+                    }
                     return [3 /*break*/, 21];
                 case 21: return [2 /*return*/];
             }

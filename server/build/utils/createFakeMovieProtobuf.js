@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createFakeMovieInBytes = void 0;
+exports.createFakeMovieProtobuf = void 0;
 var movies_pb_1 = require("../generated/src/proto/movies_pb");
-function createFakeMovieInBytes() {
+function createFakeMovieProtobuf() {
     var fakeProtoMovie = new movies_pb_1.Movie();
     var genre = new movies_pb_1.Genre();
     genre.setName("genre 1");
@@ -34,4 +34,4 @@ function createFakeMovieInBytes() {
     fakeProtoMovie.setWritersList([writer]);
     return fakeProtoMovie;
 }
-exports.createFakeMovieInBytes = createFakeMovieInBytes;
+exports.createFakeMovieProtobuf = createFakeMovieProtobuf;
