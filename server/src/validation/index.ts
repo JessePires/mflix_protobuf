@@ -46,25 +46,25 @@ export const Movie = Yup.object({
 })
 
 export const requestCreateValidation = Yup.object({
-  request_id: Yup.number().required("Por favor, informe o id da requisição."),
+  requestId: Yup.number().required("Por favor, informe o id da requisição."),
   movie: Movie.required("Por favor, envie os dados do filme."),
   data: Yup.string().nullable(),
 })
 
 export const requestUpdateValidation = Yup.object({
-  request_id: Yup.number().required("Por favor, informe o id da requisição."),
+  requestId: Yup.number().required("Por favor, informe o id da requisição."),
   movie: Movie.required("Por favor, envie os dados do filme."),
   data: Yup.string().required("Por favor, informe o id do filme."),
 })
 
 export const requestGetValidation = Yup.object({
-  request_id: Yup.number().required("Por favor, informe o id da requisição."),
+  requestId: Yup.number().required("Por favor, informe o id da requisição."),
   movie: Movie.nullable(),
   data: Yup.string().required("Por favor, preencha campo data da requisição."),
 })
 
 export const requestDeleteValidation = Yup.object({
-  request_id: Yup.number().required("Por favor, informe o id da requisição."),
+  requestId: Yup.number().required("Por favor, informe o id da requisição."),
   movie: Movie.nullable(),
   data: Yup.string().required("Por favor, informe o id do filme."),
 })

@@ -1,4 +1,6 @@
 "use strict";
+// Servidor protobuf
+// Descricao: Esta é o servidor que o cliente requisitará os dados referentes aos filmes
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -62,6 +64,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// Alunos: Jhonatan Guilherme de Oliveira Cunha
+// Alunos: Jessé Pires Barbato Rocha
+// Data de Início: 04/04/2023
+// Data última atualização: 23/05/2023
 var net_1 = __importDefault(require("net"));
 var dotenv = __importStar(require("dotenv"));
 dotenv.config();
@@ -282,7 +288,7 @@ function updateMovie(collection, id, movie) {
 }
 function handleSocketRequest(socket, req) {
     return __awaiter(this, void 0, void 0, function () {
-        var protoResponse, id, movie, data, response, _a, createdMovie, cast, genre, error_8, responseBytes, chunkSize, offset, chunk;
+        var protoResponse, id, movie, data, response, _a, createdMovie, cast, genre, responseBytes, chunkSize, offset, sizeOfResponse, amountOfChunks, i, byteArray, endOfStreamMessage, error_8, responseBytes, chunkSize, offset, chunk;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -306,7 +312,6 @@ function handleSocketRequest(socket, req) {
                     }
                     return [3 /*break*/, 18];
                 case 2:
-                    console.log("Aqui");
                     validation_1.requestCreateValidation.validateSync(req.toObject());
                     if (!movie) return [3 /*break*/, 6];
                     return [4 /*yield*/, createMovie(collection, movie)];
@@ -326,9 +331,7 @@ function handleSocketRequest(socket, req) {
                         protoResponse.addMovies(createdMovie);
                     _b.label = 6;
                 case 6: return [3 /*break*/, 19];
-                case 7:
-                    validation_1.requestGetValidation.validateSync(req.toObject());
-                    return [4 /*yield*/, getMovieById(collection, data)];
+                case 7: return [4 /*yield*/, getMovieById(collection, data)];
                 case 8:
                     response = _b.sent();
                     if (!response) {
@@ -342,7 +345,6 @@ function handleSocketRequest(socket, req) {
                     }
                     return [3 /*break*/, 19];
                 case 9:
-                    validation_1.requestUpdateValidation.validateSync(req.toObject());
                     if (!movie) return [3 /*break*/, 11];
                     return [4 /*yield*/, updateMovie(collection, data, movie)];
                 case 10:
@@ -358,10 +360,9 @@ function handleSocketRequest(socket, req) {
                     }
                     _b.label = 11;
                 case 11: return [3 /*break*/, 19];
-                case 12:
-                    validation_1.requestDeleteValidation.validateSync(req.toObject());
-                    return [4 /*yield*/, deleteMovie(collection, data)];
+                case 12: return [4 /*yield*/, deleteMovie(collection, data)];
                 case 13:
+                    // requestDeleteValidation.validateSync(req.toObject())
                     response = _b.sent();
                     if (!response) {
                         protoResponse.setMessage("Erro na tentativa de dele\u00E7\u00E3o do filme com o id ".concat(data));
@@ -373,7 +374,6 @@ function handleSocketRequest(socket, req) {
                     }
                     return [3 /*break*/, 19];
                 case 14:
-                    validation_1.requestGetValidation.validateSync(req.toObject());
                     cast = new movies_pb_1.Cast();
                     cast.setActor(data);
                     return [4 /*yield*/, getMoviesByActor(collection, cast)];
@@ -390,7 +390,6 @@ function handleSocketRequest(socket, req) {
                     }
                     return [3 /*break*/, 19];
                 case 16:
-                    validation_1.requestGetValidation.validateSync(req.toObject());
                     genre = new movies_pb_1.Genre();
                     genre.setName(data);
                     return [4 /*yield*/, getMoviesByGenre(collection, genre)];
@@ -411,7 +410,31 @@ function handleSocketRequest(socket, req) {
                     protoResponse.setSucess(false);
                     return [3 /*break*/, 19];
                 case 19:
-                    socket.write(protoResponse.serializeBinary());
+                    responseBytes = protoResponse.serializeBinary();
+                    chunkSize = 4096;
+                    offset = 0;
+                    sizeOfResponse = responseBytes.length;
+                    amountOfChunks = Number(Math.ceil(sizeOfResponse / chunkSize).toFixed(0));
+                    i = 0;
+                    while (1) {
+                        if (offset > sizeOfResponse) {
+                            offset = sizeOfResponse;
+                        }
+                        byteArray = new Uint8Array(4096);
+                        byteArray.set(responseBytes.slice(offset, offset + chunkSize));
+                        i += 1;
+                        console.log('mandou chunk, "i', i, "offset", offset, "chunkSize", chunkSize, " chunk.length", byteArray.length);
+                        socket.write(byteArray);
+                        if (i === amountOfChunks) {
+                            break;
+                        }
+                        else {
+                            offset += chunkSize;
+                        }
+                    }
+                    endOfStreamMessage = "END_OF_STREAM";
+                    console.log('mando end of stream');
+                    socket.write(endOfStreamMessage);
                     return [3 /*break*/, 21];
                 case 20:
                     error_8 = _b.sent();

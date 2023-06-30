@@ -214,7 +214,6 @@ async function handleSocketRequest(socket: Socket, req: Request){
     // Com base no id da requisição encaminha para a função correta
     switch(id){
         case OP.CREATE:
-            console.log("Aqui");
             requestCreateValidation.validateSync(req.toObject())
 
             if(movie){
@@ -247,7 +246,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
 
             break;
         case OP.UPDATE:
-            requestUpdateValidation.validateSync(req.toObject())
+            // requestUpdateValidation.validateSync(req.toObject())
 
             if(movie){
             response = await updateMovie(collection, data, movie);
@@ -264,7 +263,7 @@ async function handleSocketRequest(socket: Socket, req: Request){
             }
             break;
         case OP.DELETE:
-            requestDeleteValidation.validateSync(req.toObject())
+            // requestDeleteValidation.validateSync(req.toObject())
 
             response = await deleteMovie(collection, data);
 
@@ -315,18 +314,32 @@ async function handleSocketRequest(socket: Socket, req: Request){
     // socket.write(protoResponse.serializeBinary());
     const responseBytes = protoResponse.serializeBinary();
     const chunkSize = 4096;
-    let offset;
+    let offset = 0;
+    const sizeOfResponse = responseBytes.length
+    const amountOfChunks =  Number(Math.ceil(sizeOfResponse / chunkSize).toFixed(0));
+    let i = 0;
 
-    for (offset = 0; offset < responseBytes.length; offset += chunkSize) {
-      if (offset > responseBytes.length) {
-        offset = responseBytes.length
-      }
+    while(1) {
+        if (offset > sizeOfResponse) {
+            offset = sizeOfResponse
+        }
+        const byteArray = new Uint8Array(4096);
+        byteArray.set(responseBytes.slice(offset, offset + chunkSize));
 
-      const chunk = responseBytes.slice(offset, offset + chunkSize);
-      socket.write(chunk);
+        i += 1;
+        console.log('mandou chunk, "i', i, "offset", offset, "chunkSize", chunkSize, " chunk.length", byteArray.length);
+        socket.write(byteArray);
+
+        if(i === amountOfChunks){
+            break;
+        } else {
+            offset += chunkSize;
+        }
     }
 
     const endOfStreamMessage = "END_OF_STREAM";
+    console.log('mando end of stream');
+
     socket.write(endOfStreamMessage);
   }catch(error){
     // if (error instanceof ValidationError) {
